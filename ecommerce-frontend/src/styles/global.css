@@ -1,0 +1,133 @@
+/* src/styles/global.css */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  transition: all 0.3s ease;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark mode styles */
+.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Header styles */
+header {
+  padding: 20px;
+  background-color: #f3f3f3;
+}
+
+.dark-header {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Top header (greeting, weather and controls) */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Navigation links (Sign In, Sign Up) */
+.nav-links {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.nav-link {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background-color: #0056b3;
+}
+
+/* Cart styles */
+.cart {
+  font-size: 1.2em;
+}
+
+.cart-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Button styles */
+.button {
+  padding: 10px 16px;
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.button:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive styles with media queries */
+@media (max-width: 640px) {
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+  .nav-link {
+    text-align: center;
+    width: 100%;
+  }
+  .chat-container {
+  width: 300px;
+  margin: 20px auto;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.chat-messages {
+  height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+.chat-message {
+  margin-bottom: 10px;
+}
+
+.chat-message.user {
+  text-align: right;
+  color: blue;
+}
+
+.chat-message.bot {
+  text-align: left;
+  color: green;
+}
+}
