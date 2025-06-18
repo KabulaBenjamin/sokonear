@@ -1,0 +1,14 @@
+[project]
+  # Set the subdirectory where your backend code lives.
+  root = "ecommerce-backend"
+
+[build]
+  # Adjust these commands as needed for your project.
+  install = "npm install"
+  # If your backend has a build step (like transpiling), include it.
+  # Otherwise, you can omit or leave it empty.
+  build = ""
+
+[deploy]
+  # This specifies your start command. Make sure your package.json in ecommerce-backend has a matching script.
+  command = "npm start"
