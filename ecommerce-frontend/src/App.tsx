@@ -6,6 +6,7 @@ import EditProduct from './pages/EditProduct';
 import ProductUploadForm from './pages/ProductUploadForm';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import "./index.css";
 
 const App: React.FC = () => {
   return (
@@ -14,9 +15,6 @@ const App: React.FC = () => {
         {/* Navigation links */}
         <Link to="/dashboard" className="text-blue-600">
           Dashboard
-        </Link>
-        <Link to="/products/add" className="text-blue-600">
-          Add Product
         </Link>
         <Link to="/login" className="text-blue-600">
           Login

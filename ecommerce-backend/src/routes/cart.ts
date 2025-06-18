@@ -4,13 +4,16 @@ import Cart from '../models/cart';
 
 const router = express.Router();
 
-// Get the cart for a specific user
+// Get the cart for a specific user.
+// If the cart doesn't exist, create an empty one.
 router.get('/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
-    const cart = await Cart.findOne({ user: req.params.userId });
+    let cart = await Cart.findOne({ user: req.params.userId });
+    
+    // Instead of returning 404 when cart not found, create a new empty cart.
     if (!cart) {
-      res.status(404).json({ message: 'Cart not found.' });
-      return;
+      cart = new Cart({ user: req.params.userId, items: [] });
+      await cart.save();
     }
     res.json(cart);
   } catch (err) {

@@ -1,5 +1,6 @@
 // src/routes/products.ts
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Product from '../models/products';
 import multer from 'multer';
 import path from 'path';
@@ -34,11 +35,13 @@ const upload = multer({ storage, fileFilter });
 // Add a new product with image upload
 router.post('/', upload.single('image'), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, price, category, subCategory } = req.body;
+    // Extract seller along with other product fields from req.body
+    const { name, price, category, subCategory, seller } = req.body;
 
-    if (!name || !price || !category) {
+    // Validate required fields (including seller)
+    if (!name || !price || !category || !seller) {
       res.status(400).json({
-        message: 'Name, price, and category are required.'
+        message: 'Name, price, category, and seller are required.'
       });
       return;
     }
@@ -46,7 +49,15 @@ router.post('/', upload.single('image'), async (req: Request, res: Response): Pr
     // Retrieve file path if file was uploaded; otherwise, leave undefined
     const imageUrl = req.file ? req.file.path : undefined;
 
-    const newProduct = new Product({ name, price, category, subCategory, imageUrl });
+    // Create a new product and convert seller to an ObjectId
+    const newProduct = new Product({
+      name,
+      price,
+      category,
+      subCategory,
+      imageUrl,
+      seller: new mongoose.Types.ObjectId(seller)
+    });
     await newProduct.save();
 
     res.status(201).json({

@@ -1,5 +1,5 @@
 // src/routes/auth.ts
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -9,13 +9,14 @@ import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
-/* ---------------------- Registration Endpoint ---------------------- */
-router.post('/register', async (req, res) => {
+/* ---------------------- Signup Endpoint ---------------------- */
+router.post('/signup', async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password, role } = req.body;
 
   // Validate required fields
   if (!name || !email || !password || !role) {
-    return res.status(400).json({ message: 'Please provide name, email, password, and role.' });
+    res.status(400).json({ message: 'Please provide name, email, password, and role.' });
+    return;
   }
 
   try {
@@ -26,10 +27,11 @@ router.post('/register', async (req, res) => {
       user.role = role;
       await user.save();
 
-      return res.status(200).json({
+      res.status(200).json({
         message: 'Existing user role updated successfully.',
         user: { id: user._id, name: user.name, email: user.email, role: user.role },
       });
+      return;
     } else {
       // Create and save a new user (password will be hashed via pre-save middleware)
       const newUser = new User({ name, email, password, role });
@@ -42,25 +44,28 @@ router.post('/register', async (req, res) => {
         { expiresIn: '1d' }
       );
 
-      return res.status(201).json({
+      res.status(201).json({
         message: 'User registered successfully.',
         token,
         user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role },
       });
+      return;
     }
   } catch (error: any) {
     console.error('Registration error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.toString() });
+    res.status(500).json({ message: 'Server error', error: error.toString() });
+    return;
   }
 });
 
 /* ---------------------- Login Endpoint ---------------------- */
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     console.error('[DEBUG][Login] Missing email or password. Request body:', req.body);
-    return res.status(400).json({ message: 'Please provide email and password.' });
+    res.status(400).json({ message: 'Please provide email and password.' });
+    return;
   }
 
   try {
@@ -68,13 +73,15 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       console.error('[DEBUG][Login] No user found with email:', email);
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.error('[DEBUG][Login] Password mismatch for user with email:', email);
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
 
     const token = jwt.sign(
@@ -84,15 +91,16 @@ router.post('/login', async (req, res) => {
     );
 
     console.log('[DEBUG][Login] Login successful for user with email:', email);
-
-    return res.status(200).json({
+    res.status(200).json({
       message: 'Login successful',
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
+    return;
   } catch (error: any) {
     console.error('[DEBUG][Login] Login error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.toString() });
+    res.status(500).json({ message: 'Server error', error: error.toString() });
+    return;
   }
 });
 
@@ -104,7 +112,6 @@ const forgotPasswordLimiter = rateLimit({
 });
 
 /* ---------------------- Nodemailer Transporter Setup ---------------------- */
-// Using environment variables is recommended. For testing you can use Ethereal Email.
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.ethereal.email',
   port: Number(process.env.SMTP_PORT) || 587,
@@ -115,20 +122,22 @@ const transporter = nodemailer.createTransport({
 });
 
 /* ---------------------- Forgot Password Endpoint ---------------------- */
-router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ message: 'Please provide your email.' });
+    res.status(400).json({ message: 'Please provide your email.' });
+    return;
   }
 
   try {
     const user = await User.findOne({ email });
-    // For security, always return success even if user doesn't exist.
+    // For security, always return success even if a user doesn't exist.
     if (!user) {
-      return res.status(200).json({
+      res.status(200).json({
         message: 'If a user with that email exists, an email has been sent with reset instructions.'
       });
+      return;
     }
 
     // Generate a reset token and hash it
@@ -144,7 +153,6 @@ router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
     // Build reset URL
     const resetURL = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
 
-    // Send email with the reset URL
     const mailOptions = {
       from: '"No Reply" <no-reply@yourapp.com>',
       to: user.email,
@@ -161,26 +169,29 @@ Note: This link will expire in 1 hour.`
 
     await transporter.sendMail(mailOptions);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: 'If a user with that email exists, an email has been sent with reset instructions.'
     });
+    return;
   } catch (error: any) {
     console.error('Forgot password error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.toString() });
+    res.status(500).json({ message: 'Server error', error: error.toString() });
+    return;
   }
 });
 
 /* ---------------------- Reset Password Endpoint ---------------------- */
-router.post('/reset-password/:token', async (req, res) => {
+router.post('/reset-password/:token', async (req: Request, res: Response, next: NextFunction) => {
   const resetToken = req.params.token;
   const { password } = req.body;
 
   if (!password) {
-    return res.status(400).json({ message: 'Please provide a new password.' });
+    res.status(400).json({ message: 'Please provide a new password.' });
+    return;
   }
 
   try {
-    // Hash the token from the URL to compare with stored hashed token
+    // Hash the token from the URL to compare with the stored hashed token
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     // Find user with matching token that hasn't expired
@@ -190,22 +201,25 @@ router.post('/reset-password/:token', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+      res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+      return;
     }
 
-    // Set the new password; the pre-save hook will take care of hashing
+    // Set the new password; the pre-save hook will hash it
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
     await user.save();
 
-    return res.status(200).json({
+    res.status(200).json({
       message: 'Your password has been successfully reset. Please log in with your new password.'
     });
+    return;
   } catch (error: any) {
     console.error('Reset password error:', error);
-    return res.status(500).json({ message: 'Server error', error: error.toString() });
+    res.status(500).json({ message: 'Server error', error: error.toString() });
+    return;
   }
 });
 
