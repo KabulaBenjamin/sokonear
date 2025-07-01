@@ -1,0 +1,14 @@
+[project]
+source = "ecommerce-backend"
+
+[[build.phases.setup.packages]]
+name = "nodejs"
+
+[build.phases.setup]
+run = "npm ci"
+
+[build.phases.build]
+run = "npm run build"
+
+[build.phases.start]
+run = "npm start"
